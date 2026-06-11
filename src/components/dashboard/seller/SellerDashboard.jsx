@@ -15,44 +15,47 @@ const SellerDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Fetch listed properties safely
-// Fetch listed properties safely (CRASH-PROOF & ROBUST)
-  const fetchMyProperties = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get('/properties/my-properties');
-      const data = response?.data;
-      
-      if (Array.isArray(data)) {
-        setMyProperties(data);
-      } else if (data && Array.isArray(data.properties)) {
-        setMyProperties(data.properties);
-      } else if (data && Array.isArray(data.data)) {
-        setMyProperties(data.data);
-      } else {
-        setMyProperties([]);
-      }
-      setErrorMsg('');
-    } catch (err) {
-      console.error("Backend Error Response:", err?.response?.data);
+// Fetch listed properties safely
+// backend pe /properties/my-properties route nahi hai
+// is liye common /properties endpoint se seller data load kar rahe hain
 
-      // 🟢 SAFEST CHECK: Agar detail ke andar complex array/object ho toh handle karein
-      const rawDetail = err?.response?.data?.detail;
-      if (typeof rawDetail === 'string') {
-        setErrorMsg(rawDetail);
-      } else if (Array.isArray(rawDetail) && rawDetail[0]?.msg) {
-        // FastAPI validation array ka pehla error extract karein
-        setErrorMsg(`${rawDetail[0].loc.join('.')} - ${rawDetail[0].msg}`);
-      } else if (rawDetail && typeof rawDetail === 'object') {
-        setErrorMsg(JSON.stringify(rawDetail));
-      } else {
-        setErrorMsg('Failed to sync your real estate catalog (Status 422).');
-      }
-    } finally {
-      setLoading(false);
+const fetchMyProperties = async () => {
+  setLoading(true);
+
+  try {
+    const response = await api.get("/properties");
+
+    const data = response?.data;
+
+    if (Array.isArray(data)) {
+      setMyProperties(data);
+    } else if (data && Array.isArray(data.properties)) {
+      setMyProperties(data.properties);
+    } else if (data && Array.isArray(data.data)) {
+      setMyProperties(data.data);
+    } else {
+      setMyProperties([]);
     }
-  };
 
+    setErrorMsg("");
+  } catch (err) {
+    console.error("Backend Error Response:", err?.response?.data);
+
+    const rawDetail = err?.response?.data?.detail;
+
+    if (typeof rawDetail === "string") {
+      setErrorMsg(rawDetail);
+    } else if (Array.isArray(rawDetail) && rawDetail[0]?.msg) {
+      setErrorMsg(`${rawDetail[0].loc.join(".")} - ${rawDetail[0].msg}`);
+    } else if (rawDetail && typeof rawDetail === "object") {
+      setErrorMsg(JSON.stringify(rawDetail));
+    } else {
+      setErrorMsg("Failed to load your property catalog.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
     if (activeTab === 'my-properties') {
       fetchMyProperties();
